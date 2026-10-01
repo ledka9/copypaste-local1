@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>copypaste</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{--bg:#e7e4dc;--surface:#f7f5f0;--ink:#15171d;--mu:#605d55;--line:#cdc9bd;--ac:#2b3fe0;--ac-t:rgba(43,63,224,.07);--sig:#ffd84d;--rec:#0b7f70;--panel:#111a3d;--panel-t:#c9cfe8;--r:10px;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0c0f1c;--surface:#151a2c;--ink:#ebeaf2;--mu:#9aa0b5;--line:#272d44;--ac:#8a99ff;--ac-t:rgba(138,153,255,.1);--rec:#3ddbc0;--panel:#182049}
+:root:not([data-theme="light"]) #send{color:#0c0f1c}}
+:root[data-theme="dark"]{--bg:#0c0f1c;--surface:#151a2c;--ink:#ebeaf2;--mu:#9aa0b5;--line:#272d44;--ac:#8a99ff;--ac-t:rgba(138,153,255,.1);--rec:#3ddbc0;--panel:#182049}
+:root[data-theme="dark"] #send{color:#0c0f1c}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Hanken Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1080px;margin:0 auto;padding:28px 22px 64px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.wordmark{display:flex;align-items:center;gap:10px;font:700 28px/1 "Bricolage Grotesque",system-ui,sans-serif;letter-spacing:-.035em;margin:0 0 26px}
+.wordmark svg{flex:none}
+.session{background:var(--panel);color:#fff;border-radius:24px;padding:30px 34px;display:flex;gap:36px;align-items:center;flex-wrap:wrap}
+.session .lead{flex:1 1 300px;min-width:0}
+.session p{margin:0 0 6px;color:var(--panel-t)}
+#code{display:flex;gap:8px;margin:14px 0 20px}
+#code span{width:50px;height:66px;display:grid;place-items:center;border-radius:12px;color:var(--sig);font:700 38px/1 "Bricolage Grotesque",system-ui,sans-serif;background:linear-gradient(#2b3668,#1f2858);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 4px 0 #080d24,0 6px 10px rgba(0,0,0,.3);margin-bottom:6px}
+.state{display:flex;align-items:center;gap:12px;font-size:15px;color:var(--panel-t)}
+.link{display:inline-flex;align-items:center;width:38px;flex:none}
+.link i{width:10px;height:10px;border-radius:50%;border:2px solid #7b84a6;flex:none}
+.link b{flex:1;border-top:2px dashed #7b84a6;margin:0 2px}
+#sess[data-state="waiting"] .link i:first-child{background:#5eea9f;border-color:#5eea9f}
+#sess[data-state="waiting"] .link i:last-child{border-color:#5eea9f;animation:pulse 1.6s ease-in-out 6}
+#sess[data-state="paired"] .link i{background:#5eea9f;border-color:#5eea9f}
+#sess[data-state="paired"] .link b{border-top-style:solid;border-top-color:#5eea9f}
+#sess[data-state="paired"] #code span{animation:press .4s ease both}
+#code span:nth-child(2){animation-delay:.07s!important}#code span:nth-child(3){animation-delay:.14s!important}#code span:nth-child(4){animation-delay:.21s!important}#code span:nth-child(5){animation-delay:.28s!important}#code span:nth-child(6){animation-delay:.35s!important}
+@keyframes pulse{50%{opacity:.3}}
+@keyframes press{40%{transform:translateY(4px);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 0 0 #080d24,0 2px 4px rgba(0,0,0,.3)}}
+@media (prefers-reduced-motion:reduce){#sess *{animation:none!important}#bar{transition:none}}
+.side{display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap}
+#qr{background:#fff;padding:9px;border-radius:var(--r);line-height:0}
+.joinbox label{display:block;font-size:15px;color:var(--panel-t);margin-bottom:2px}
+.joinrow{display:flex;gap:10px;align-items:center}
+input[type=text]{font:600 22px "Bricolage Grotesque",system-ui,sans-serif;letter-spacing:.14em;width:150px;height:48px;padding:0 2px;background:transparent;border:0;border-bottom:2px solid rgba(255,255,255,.35);color:#fff;text-transform:uppercase;border-radius:0}
+input[type=text]::placeholder{color:rgba(255,255,255,.62)}
+input[type=text]:focus{outline:0;border-bottom-color:var(--sig)}
+.tog{display:none;margin-left:auto}
+.session.compact{padding:12px 20px;gap:10px 18px;border-radius:18px}
+.compact .intro{display:none}
+.compact .lead{display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
+.compact #code{margin:0;gap:5px}
+.compact #code span{width:30px;height:40px;font-size:22px;border-radius:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 2px 0 #080d24;margin-bottom:2px}
+.compact .tog{display:inline-flex}
+.compact .side{display:none;width:100%;padding:8px 0 6px}
+.compact.open .side{display:flex}
+.work{display:grid;grid-template-columns:1fr;gap:40px;margin-top:40px}
+@media (min-width:900px){.work{grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:56px}#card textarea{min-height:240px}}
+h2{font:700 24px/1.2 "Bricolage Grotesque",system-ui,sans-serif;letter-spacing:-.02em;margin:0 0 14px}
+.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.head h2{margin:0}
+#card textarea{display:block;width:100%;min-height:120px;font:inherit;padding:18px;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:14px;resize:vertical}
+#card textarea::placeholder{color:var(--mu)}
+#card textarea:focus{outline:0;border-color:var(--ac);box-shadow:0 0 0 4px var(--ac-t)}
+#card.drag textarea{border-color:var(--ac);border-style:dashed;background:var(--ac-t)}
+.tools{display:flex;gap:6px 14px;align-items:center;flex-wrap:wrap;margin-top:10px}
+button{font:600 16px "Hanken Grotesk",system-ui,sans-serif;cursor:pointer;border:0;background:none;color:var(--ac);padding:0 4px;min-height:44px;display:inline-flex;align-items:center;border-radius:6px}
+button:hover{text-decoration:underline;text-underline-offset:4px}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.session button{color:var(--sig)}
+.session button:focus-visible,.session input:focus-visible{outline-color:var(--sig)}
+#send{background:var(--ac);color:#fff;padding:0 28px;min-height:48px;border-radius:999px;margin-right:8px}
+#send:hover{text-decoration:none;filter:brightness(1.08)}
+.hint{font-size:14px;color:var(--mu);margin:8px 0 0}
+.pending[hidden]{display:none}
+.pending{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.pending li{display:flex;align-items:center;gap:10px;background:var(--surface);border:1.5px solid var(--ac);border-radius:var(--r);padding:0 2px 0 14px}
+.pending .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pending small{color:var(--mu);margin-left:8px}
+.pending button{min-width:44px;justify-content:center;font-size:22px;color:var(--mu)}
+#prog{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:12px}
+#bar{display:block;height:100%;width:0;background:var(--ac);transition:width .3s}
+.item{border-left:3px solid var(--ac);padding:2px 0 2px 18px;margin:0 0 20px}
+.item.theirs{border-left-color:var(--rec)}
+.meta{font-size:13px;color:var(--mu);margin-bottom:3px}
+.txt{white-space:pre-wrap;word-break:break-word}
+.item img{max-width:100%;border-radius:var(--r);display:block;margin-top:6px}
+.file{display:flex;align-items:center;gap:12px}
+.file .ic{color:var(--mu);display:flex}
+.file small{color:var(--mu);font-size:13px}
+.acts{display:flex;gap:18px;margin-top:2px}
+.acts button{font-size:15px;padding:0 2px}
+#feed .st{color:var(--mu);font-size:16px;max-width:30ch}
+</style>
+</head>
+<body>
+<main>
+<p class="wordmark"><svg width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><rect x="2" y="2" width="15" height="15" rx="4.5" fill="none" stroke="currentColor" stroke-width="2.5"/><rect x="11" y="11" width="15" height="15" rx="4.5" fill="var(--ac)"/></svg>copypaste</p>
+<div class="sr" id="sr" role="status" aria-live="polite"></div>
+
+<section class="session" id="sess">
+  <div class="lead">
+    <p class="intro">Ouvrez cette page sur votre autre appareil, puis entrez ce code ou scannez le QR code.</p>
+    <div id="code" role="img"></div>
+    <div class="state" aria-live="polite"><span class="link" aria-hidden="true"><i></i><b></b><i></i></span><span id="status">Connexion…</span></div>
+  </div>
+  <button class="tog" id="toggle" aria-expanded="false">Code et QR</button>
+  <div class="side">
+    <div id="qr"></div>
+    <div class="joinbox">
+      <label for="join">J'ai déjà un code</label>
+      <div class="joinrow">
+        <input type="text" id="join" maxlength="6" placeholder="ABC123" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <button id="joinBtn">Rejoindre</button>
+      </div>
+      <button id="newCode">Nouveau code</button>
+    </div>
+  </div>
+</section>
+
+<div class="work">
+  <section id="card">
+    <h2>Envoyer</h2>
+    <textarea id="box" aria-label="Texte à envoyer" placeholder="Écrivez ou collez du texte. Vous pouvez aussi coller une image ou glisser des fichiers ici."></textarea>
+    <div class="tools">
+      <button id="send">Envoyer</button>
+      <button id="fileBtn">Choisir un fichier</button>
+      <input type="file" id="fileIn" multiple hidden>
+      <button id="paste">Coller le presse-papiers</button>
+    </div>
+    <ul class="pending" id="pending" hidden aria-label="Fichiers prêts à envoyer"></ul>
+    <div id="prog" hidden><i id="bar"></i></div>
+    <p class="hint" id="msg">Fichiers jusqu'à 300 Mo.</p>
+  </section>
+
+  <section>
+    <div class="head"><h2>Échanges</h2><button id="clear">Vider la liste</button></div>
+    <div id="feed"><div class="st" id="empty">Ce que vous enverrez ou recevrez apparaîtra ici.</div></div>
+  </section>
+</div>
+</main>
+
+<script>
+(function(){
+  var ME = Math.random().toString(36).slice(2,10);
+  var cur = null, code = null, items = [], paired = false;
+  var $ = function(i){return document.getElementById(i)};
+  var CH = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+  function showCode(c){var k=$("code");k.innerHTML="";c.split("").forEach(function(ch){var t=document.createElement("span");t.textContent=ch;k.appendChild(t)});k.setAttribute("aria-label","Code "+c.split("").join(" "))}
+  function rnd(){var s="";for(var i=0;i<6;i++)s+=CH[Math.floor(Math.random()*CH.length)];return s}
+  function safeGet(){try{return localStorage.getItem("cp_code")}catch(e){return null}}
+  function safeSet(v){try{localStorage.setItem("cp_code",v)}catch(e){}}
+  function setStatus(t,on){$("status").textContent=t;$("sess").dataset.state=on?(paired?"paired":"waiting"):"off"}
+
+  function drawQR(){
+    var el=$("qr");el.innerHTML="";
+    var url=location.href.split("#")[0]+"#"+code;
+    try{new QRCode(el,{text:url,width:112,height:112,colorDark:"#0f1830",colorLight:"#ffffff"})}catch(e){el.textContent=""}
+  }
+
+  function render(){
+    var f=$("feed");f.innerHTML="";
+    if(!items.length){var e=document.createElement("div");e.className="st";e.textContent="Ce que vous enverrez ou recevrez apparaîtra ici.";f.appendChild(e);return}
+    items.forEach(function(it){
+      var d=document.createElement("div");d.className="item "+(it.mine?"mine":"theirs");
+      var m=document.createElement("div");m.className="meta";
+      m.textContent=(it.mine?"Envoyé":"Reçu")+" à "+it.time;d.appendChild(m);
+      if(it.type==="file"){
+        var fl=document.createElement("div");fl.className="file";
+        var ic=document.createElement("span");ic.className="ic";ic.innerHTML='<svg width="24" height="28" viewBox="0 0 24 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 2h12l6 6v18H3z"/><path d="M15 2v6h6"/></svg>';
+        var nm=document.createElement("div");nm.className="txt";nm.textContent=it.data.name;
+        var sm=document.createElement("small");sm.textContent=" ("+fmt(it.data.size)+")";nm.appendChild(sm);
+        fl.appendChild(ic);fl.appendChild(nm);d.appendChild(fl);
+        var a0=document.createElement("div");a0.className="acts";
+        var dl=document.createElement("button");dl.textContent="Télécharger";
+        dl.onclick=function(){dlFile(it.data,dl)};a0.appendChild(dl);d.appendChild(a0);
+        f.appendChild(d);return;
+      }
+      if(it.type==="image"){
+        var im=document.createElement("img");im.src=it.data;d.appendChild(im);
+      }else{
+        var t=document.createElement("div");t.className="txt";t.textContent=it.data;d.appendChild(t);
+      }
+      var a=document.createElement("div");a.className="acts";
+      var b=document.createElement("button");b.className="g";
+      b.textContent=it.type==="image"?"Copier l'image":"Copier";
+      b.onclick=function(){copyItem(it,b)};a.appendChild(b);
+      if(it.type==="image"){var b2=document.createElement("button");b2.textContent="Télécharger";b2.onclick=function(){dlImage(it,b2)};a.appendChild(b2)}
+      d.appendChild(a);
+      f.appendChild(d);
+    });
+  }
+
+  function fmt(n){return n>1048576?(n/1048576).toFixed(1)+" Mo":Math.max(1,Math.round(n/1024))+" Ko"}
+
+  async function dlFile(f,b){
+    var o=b.textContent;b.textContent="Téléchargement…";
+    try{
+      var ids=f.ids||[f.id],parts=[];
+      for(var i=0;i<ids.length;i++){
+        if(ids.length>1)b.textContent="Téléchargement "+(i+1)+"/"+ids.length+"…";
+        var r=await fetch("/_blob/"+ids[i]);if(!r.ok)throw 0;
+        parts.push(await r.blob());
+      }
+      var bl=new Blob(parts,{type:"application/octet-stream"});
+      var dls=await claude.use("downloads");
+      if(dls){await dls.save({filename:f.name,data:bl})}
+      else{var u=URL.createObjectURL(bl),a=document.createElement("a");a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000)}
+      b.textContent=o;
+    }catch(e){b.textContent="Échec";setTimeout(function(){b.textContent=o},1800)}
+  }
+
+  var DEF="Fichiers jusqu'à 300 Mo.";
+  function msg(t,pct){$("msg").textContent=t;var p=$("prog");if(pct==null){p.hidden=true}else{p.hidden=false;$("bar").style.width=pct+"%"}}
+  function announce(t){var x=$("sr");x.textContent="";setTimeout(function(){x.textContent=t},60)}
+  function getBlob(u){return u.indexOf("data:")===0?Promise.resolve(d2b(u)):fetch(u).then(function(r){return r.blob()})}
+  function toPng(bl){return createImageBitmap(bl).then(function(b){var c=document.createElement("canvas");c.width=b.width;c.height=b.height;c.getContext("2d").drawImage(b,0,0);return new Promise(function(res){c.toBlob(res,"image/png")})})}
+  function d2b(u){var q=u.split(","),m=/data:([^;]+)/.exec(q[0])[1],bin=atob(q[1]),a=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return new Blob([a],{type:m})}
+  async function dlImage(it,b){
+    var o=b.textContent;
+    try{
+      var bl=await getBlob(it.data),dls=await claude.use("downloads");
+      if(dls){await dls.save({filename:"image.jpg",data:bl})}
+      else{var u=URL.createObjectURL(bl),a=document.createElement("a");a.href=u;a.download="image.jpg";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000)}
+    }catch(e){b.textContent="Échec";setTimeout(function(){b.textContent=o},1800)}
+  }
+  async function sendFile(file){
+    if(!cur){msg("Hors ligne : rien n'a été envoyé.");return false}
+    try{
+      var as=await claude.use("assets");
+      if(!as){msg("L'envoi de fichiers n'est pas disponible sur cet appareil (droits d'édition requis).");return false}
+      var CH=16*1048576,n=Math.max(1,Math.ceil(file.size/CH)),ids=[];
+      for(var i=0;i<n;i++){
+        msg("Envoi de « "+file.name+" » : partie "+(i+1)+" sur "+n+"…",Math.max(6,Math.round(i/n*100)));
+        var up=await as.upload(file.slice(i*CH,Math.min(file.size,(i+1)*CH)));
+        ids.push(up.id);
+      }
+      var meta={name:file.name,size:file.size,ids:ids};
+      if(!(await emit("file",meta)))return false;
+      add("file",meta,true);
+      return true;
+    }catch(e){msg("Échec de l'envoi du fichier"+(e&&e.code?" ("+e.code+")":"")+".");return false}
+  }
+
+  var pend=[];
+  function renderPending(){
+    var ul=$("pending");ul.innerHTML="";ul.hidden=!pend.length;
+    pend.forEach(function(f,i){
+      var li=document.createElement("li");
+      var nm=document.createElement("span");nm.className="nm";nm.textContent=f.name;
+      var sm=document.createElement("small");sm.textContent=fmt(f.size);nm.appendChild(sm);
+      var x=document.createElement("button");x.textContent="×";x.setAttribute("aria-label","Retirer "+f.name);
+      x.onclick=function(){pend.splice(i,1);renderPending();msg(pend.length?"Cliquez sur Envoyer pour transmettre.":DEF)};
+      li.appendChild(nm);li.appendChild(x);ul.appendChild(li);
+    });
+    var n=pend.length;$("send").textContent="Envoyer"+(n?" "+n+" fichier"+(n>1?"s":""):"");
+  }
+  function addFiles(list){
+    var big=0;
+    Array.prototype.forEach.call(list,function(f){if(f.size>300*1048576)big++;else pend.push(f)});
+    renderPending();
+    if(big)msg(big+" fichier"+(big>1?"s dépassent":" dépasse")+" 300 Mo et "+(big>1?"n'ont":"n'a")+" pas été ajouté"+(big>1?"s":"")+".");
+    else if(pend.length)msg(pend.length+" fichier"+(pend.length>1?"s prêts":" prêt")+" à envoyer. Cliquez sur Envoyer.");
+  }
+  async function sendAll(){
+    var hasText=$("box").value.trim().length>0;
+    if(!pend.length&&!hasText){msg("Rien à envoyer : écrivez du texte ou choisissez un fichier.");return}
+    if(hasText)await sendText();
+    var list=pend.slice(),ok=0;
+    for(var i=0;i<list.length;i++){
+      if(await sendFile(list[i])){ok++;pend.splice(pend.indexOf(list[i]),1);renderPending()}else break;
+    }
+    if(list.length&&ok===list.length)msg(ok+" fichier"+(ok>1?"s envoyés":" envoyé")+".");
+  }
+
+  function copyItem(it,b){
+    var ok=function(){var o=b.textContent;b.textContent="Copié ✓";setTimeout(function(){b.textContent=o},1200)};
+    try{
+      if(it.type==="image"){
+        getBlob(it.data).then(toPng).then(function(bl){
+          return navigator.clipboard.write([new ClipboardItem({[bl.type]:bl})])
+        }).then(ok).catch(function(){});
+      }else{navigator.clipboard.writeText(it.data).then(ok).catch(function(){})}
+    }catch(e){}
+  }
+
+  function add(type,data,mine){
+    items.unshift({type:type,data:data,mine:mine,time:new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})});
+    if(items.length>30)items.pop();
+    render();
+  }
+
+  function onClip(m){
+    var d=(m&&m.data!==undefined)?m.data:m;
+    if(!d||d.from===ME)return;
+    if(d.type==="text"){add("text",d.data,false);announce("Nouvel élément reçu")}
+    else if(d.type==="textref"){fetch("/_blob/"+d.data).then(function(r){return r.text()}).then(function(t){add("text",t,false);announce("Nouvel élément reçu")}).catch(function(){add("text","Contenu indisponible.",false)})}
+    else if(d.type==="imageref"){add("image","/_blob/"+d.data,false);announce("Image reçue")}
+    else if(d.type==="file"&&d.data&&(d.data.ids||d.data.id)){add("file",d.data,false);announce("Fichier reçu : "+d.data.name)}
+  }
+
+  function countPeers(p){
+    var n=Array.isArray(p)?p.length:(p&&p.peers?p.peers.length:(p&&typeof p==="object"?Object.keys(p).length:0));
+    paired=n>1;setStatus(n>1?("Connecté, "+n+" appareils"):"Connecté, en attente d'un autre appareil",true);
+    var se=$("sess");se.classList.toggle("compact",n>1);if(n<=1){se.classList.remove("open");$("toggle").textContent="Code et QR";$("toggle").setAttribute("aria-expanded","false")}
+  }
+
+  async function connect(c){
+    code=c;safeSet(c);showCode(c);drawQR();$("sess").classList.remove("compact","open");
+    paired=false;setStatus("Connexion…",false);
+    try{
+      var room=await claude.use("room");
+      if(!room){setStatus("Hors ligne : connexion indisponible dans cette vue",false);return}
+      if(cur&&cur.leave){try{cur.leave()}catch(e){}}
+      cur=await room.join("cp-"+c.toLowerCase());
+      cur.on("clip",onClip,function(){setStatus("Connexion perdue",false)});
+      if(cur.onPeers)cur.onPeers(countPeers);
+      if(cur.onConnection)cur.onConnection(function(ok){if(ok)countPeers(cur.peers());else setStatus("Connexion perdue, reconnexion…",false)});
+      setStatus("Connecté, en attente d'un autre appareil",true);
+    }catch(e){setStatus("Hors ligne"+(e&&e.code?" ("+e.code+")":""),false)}
+  }
+
+  async function emit(type,data){
+    if(!cur){setStatus("Hors ligne : rien n'a été envoyé",false);return false}
+    if(cur.connected&&!cur.connected()){setStatus("Connexion perdue : rien n'a été envoyé",false);return false}
+    try{await cur.emit("clip",{from:ME,type:type,data:data});return true}
+    catch(e){setStatus("Envoi refusé ("+(e&&e.code?e.code:"erreur")+")",false);return false}
+  }
+
+  async function upBlob(bl){
+    try{
+      var as=await claude.use("assets");
+      if(!as){msg("Ce contenu est trop volumineux pour cet appareil : il faut les droits d'édition.");return null}
+      return (await as.upload(bl)).id;
+    }catch(e){msg("Échec de l'envoi"+(e&&e.code?" ("+e.code+")":"")+".");return null}
+  }
+  async function sendText(){
+    var v=$("box").value;if(!v.trim())return;
+    if(new Blob([v]).size<=3000){if(await emit("text",v)){add("text",v,true);$("box").value=""}return}
+    var id=await upBlob(new Blob([v],{type:"text/plain"}));
+    if(id&&await emit("textref",id)){add("text",v,true);$("box").value="";msg(DEF)}
+  }
+
+  function sendImage(file){
+    var r=new FileReader();
+    r.onload=function(){
+      var im=new Image();
+      im.onload=function(){
+        var s=Math.min(1,1600/Math.max(im.width,im.height));
+        var c=document.createElement("canvas");c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);
+        c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+        c.toBlob(async function(bl){
+          if(!bl)return;
+          var id=await upBlob(bl);
+          if(id&&await emit("imageref",id)){add("image","/_blob/"+id,true);msg(DEF)}
+        },"image/jpeg",0.85);
+      };
+      im.src=r.result;
+    };
+    r.readAsDataURL(file);
+  }
+
+  $("send").onclick=sendAll;
+  $("clear").onclick=function(){items=[];render()};
+  $("paste").onclick=function(){
+    try{navigator.clipboard.readText().then(function(t){$("box").value=t}).catch(function(){})}catch(e){}
+  };
+  $("joinBtn").onclick=function(){
+    var v=$("join").value.trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+    if(v.length===6){connect(v);$("join").value=""}
+  };
+  $("toggle").onclick=function(){var o=$("sess").classList.toggle("open");this.textContent=o?"Masquer":"Code et QR";this.setAttribute("aria-expanded",o?"true":"false")};
+  $("newCode").onclick=function(){connect(rnd())};
+  $("fileBtn").onclick=function(){$("fileIn").click()};
+  $("fileIn").onchange=function(){addFiles(this.files);this.value=""};
+  var cd=$("card");
+  ["dragenter","dragover"].forEach(function(n){cd.addEventListener(n,function(e){e.preventDefault();cd.classList.add("drag")})});
+  ["dragleave","drop"].forEach(function(n){cd.addEventListener(n,function(e){e.preventDefault();cd.classList.remove("drag")})});
+  cd.addEventListener("drop",function(e){addFiles(e.dataTransfer.files||[])});
+  document.addEventListener("paste",function(e){
+    var its=(e.clipboardData&&e.clipboardData.items)||[];
+    for(var i=0;i<its.length;i++){
+      if(its[i].type.indexOf("image/")===0){e.preventDefault();sendImage(its[i].getAsFile());return}
+    }
+  });
+  $("box").addEventListener("keydown",function(e){if((e.ctrlKey||e.metaKey)&&e.key==="Enter")sendAll()});
+
+  var h=(location.hash||"").replace("#","").toUpperCase();
+  var start=/^[A-Z0-9]{6}$/.test(h)?h:(safeGet()||rnd());
+  showCode(start);code=start;drawQR();
+  connect(start);
+})();
+</script>
+</body>
+</html>
